@@ -1,0 +1,90 @@
+// to create a product categories
+Level2 = [Category]&"-"&[Sub Category]
+Level3 = [Category]&"-"&[Sub Category]&"-"&[Brand]
+Measure:
+Visual Control = 
+var _categorytopn = 
+SELECTCOLUMNS(
+ TOPN(
+ SELECTEDVALUE(Parameter[Parameter]),
+ SUMMARIZE(
+ ALL('Table'),
+ 'Table'[Category],
+ "Sales",SUM('Table'[Sales])
+ ),
+ [Sales]
+ ),
+ "Category",
+ [Category]
+)
+var _subcategorytopn = 
+SELECTCOLUMNS(
+ TOPN(
+ SELECTEDVALUE(Parameter[Parameter]), 
+ SUMMARIZE(
+ FILTER(
+ ALL('Table'),
+ 'Table'[Category]=SELECTEDVALUE('Table'[Category])
+ ),
+ 'Table'[Category],
+ 'Table'[Sub Category],
+ "Sales",SUM('Table'[Sales])
+ ),
+ [Sales]
+ ),
+ "Level2",
+ [Category]&"-"&[Sub Category]
+)
+IF(
+ ISINSCOPE('Table'[Category])&&NOT(ISINSCOPE('Table'[Sub 
+Category]))&&NOT(ISINSCOPE('Table'[Brand])),
+ IF(
+ SELECTEDVALUE('Table'[Category]) in _categorytopn,
+ 1,0
+ ),
+ IF(
+ ISINSCOPE('Table'[Sub Category])&&NOT(ISINSCOPE('Table'[Brand])),
+ IF( 
+ SELECTEDVALUE('Table'[Category]) in _categorytopn&&
+ SELECTEDVALUE('Table'[Level2]) in _subcategorytopn,
+ 1,0
+ ),
+ IF(
+ ISINSCOPE('Table'[Brand]),
+ IF(
+ SELECTEDVALUE('Table'[Category]) in _categorytopn&&
+ SELECTEDVALUE('Table'[Level2]) in _subcategorytopn&&
+ SELECTEDVALUE('Table'[Level3]) in _brandtopn,
+ 1,0
+ )
+ )
+ )
+// to update product category
+var data = JSON.stringify({
+ "name": "updated category name",
+ "custom_id": "my_id",
+ "description": "category description"
+});
+var xhr = new XMLHttpRequest();
+xhr.withCredentials = true;
+xhr.addEventListener("readystatechange", function () {
+ if (this.readyState === 4) {
+ console.log(this.responseText);
+ }
+});
+xhr.open("POST", "https://<your_app_subdomain>.user.com/api/public/product-categories-byid/:custom_id/");
+xhr.setRequestHeader("authorization", "Token <your_64_char_api_key>");
+xhr.setRequestHeader("content-type", "application/json");
+xhr.send(data);
+// to delete the product /category
+var data = null;
+var xhr = new XMLHttpRequest();
+xhr.withCredentials = true;
+xhr.addEventListener("readystatechange", function () {
+ if (this.readyState === 4) {
+ console.log(this.responseText);
+ }
+});
+xhr.open("DELETE");
+xhr.setRequestHeader("authorization", "Token <your_64_char_api_key>");
+xhr.send(data);
